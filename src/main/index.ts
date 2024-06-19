@@ -2,12 +2,20 @@
  * @Author: JOY
  * @Date: 2024-06-18 09:40:29
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-18 16:14:18
+ * @LastEditTime: 2024-06-19 13:45:33
+ * @Description:
+ */
+/*
+ * @Author: JOY
+ * @Date: 2024-06-18 09:40:29
+ * @LastEditors: JOY
+ * @LastEditTime: 2024-06-19 11:05:45
  * @Description:
  */
 import { app, shell, BrowserWindow, protocol } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+// import start from "../service/serve";
 
 import initIpcEvent from "./event/ipc-event";
 
@@ -25,13 +33,13 @@ protocol.registerSchemesAsPrivileged([
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    title: "redis 客户端",
+    title: "redis客户端",
     width: 900,
     height: 670,
     movable: true,
     show: false,
     frame: false,
-    resizable: false,
+    resizable: true,
     icon,
     autoHideMenuBar: true,
     webPreferences: {
@@ -55,6 +63,7 @@ function createWindow() {
     mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
+    mainWindow.webContents.send("load", join(__dirname, "../renderer/index.html"));
   }
 
   return mainWindow;
@@ -94,5 +103,5 @@ app.on("window-all-closed", () => {
   }
 });
 
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.
+// 启动接口服务
+// start();

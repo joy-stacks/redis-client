@@ -6,7 +6,8 @@
     "src/main/*.d.ts",
     "src/preload/**/*",
     "src/preload/*.d.ts",
-    "src/preload/*.ts"
+    "src/preload/*.ts",
+    "src/service/**/*",
   ],
   "compilerOptions": {
     "composite": true,

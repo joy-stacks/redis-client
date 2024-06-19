@@ -2,14 +2,14 @@
  * @Author: JOY
  * @Date: 2024-06-18 10:59:55
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-18 16:30:29
+ * @LastEditTime: 2024-06-19 14:39:11
  * @Description: 
 -->
 <template>
   <div class="cursor-move" style="-webkit-app-region: drag">
-    <ul class="flex flex-row items-center justify-center" style="-webkit-app-region: no-drag">
+    <ul class="flex flex-row items-center justify-center">
       <li class="flex-1"></li>
-      <li class="toolbar" @click.stop="() => handleClick('min')">
+      <li class="toolbar" @click="() => handleClick('min')">
         <icon-minus />
       </li>
       <li class="toolbar" @click.stop="() => handleClick('max')">
@@ -80,6 +80,7 @@ export default defineComponent({
 </script>
 <style lang="less">
 .toolbar {
+  -webkit-app-region: no-drag;
   @apply w-10 h-8 flex flex-row justify-center items-center cursor-pointer;
 }
 </style>

@@ -2,17 +2,17 @@
  * @Author: JOY
  * @Date: 2024-05-28 16:45:02
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-18 11:40:55
+ * @LastEditTime: 2024-06-19 11:37:32
  * @Description:
  */
 import { App } from "vue";
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 
 // 导入基础路由
 import routes from "./routes";
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: routes,
   strict: true,
   scrollBehavior: () => ({ left: 0, top: 0 }),
