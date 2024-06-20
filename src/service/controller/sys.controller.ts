@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-20 13:35:21
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-20 17:36:00
+ * @LastEditTime: 2024-06-20 17:38:52
  * @Description:
  */
 import { Body, Controller, Logger, Post } from "@nestjs/common";
@@ -50,7 +50,7 @@ export class SysController {
       // 获取组名称
       const groupName = groupAddDto.group_name;
       if (!groupName) throw ResponseStatus.GroupNameIsNotEmpty;
-
+      console.log(groupAddDto)
       if (fs.existsSync(ROOT_CONF)) {
         // 读取本地配置
         const read = fs.readFileSync(ROOT_CONF, { encoding: "utf-8" });
