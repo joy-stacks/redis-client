@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-18 11:41:32
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-19 17:28:24
+ * @LastEditTime: 2024-06-20 15:04:42
  * @Description: 
 -->
 <template>
@@ -25,10 +25,14 @@
           style="box-shadow: 0px 0px 8px -4px rgba(130, 85, 255, 0.6)"
         >
           <a-tooltip content="添加连接" position="bottom">
-            <JIcon class="cursor-pointer" name="bolt" :width="16" :height="16"></JIcon>
+            <span>
+              <JIcon class="cursor-pointer" name="bolt" :width="16" :height="16"></JIcon>
+            </span>
           </a-tooltip>
           <a-tooltip content="添加分组" position="bottom">
-            <JIcon class="cursor-pointer" name="folder" :width="16" :height="16"></JIcon>
+            <span @click="handleAddGroup">
+              <JIcon class="cursor-pointer" name="folder" :width="16" :height="16"></JIcon>
+            </span>
           </a-tooltip>
           <a-divider class="mx-1" direction="vertical" />
           <a-input class="flex-1" size="small" placeholder="过滤">
@@ -60,6 +64,8 @@ import JHeader from "./header.vue";
 import JMenu from "./menu.vue";
 import JTag from "./tag.vue";
 
+import axios from "axios";
+
 export default defineComponent({
   components: {
     JIcon,
@@ -68,11 +74,20 @@ export default defineComponent({
     JTag,
   },
   setup() {
+    const handleAddGroup = async () => {
+      const result = await axios.post("http://localhost:3000/v1/sys/group/add");
+      console.log(result);
+    };
+
     onMounted(() => {
       window.electron.ipcRenderer.on("load", (_, p: string) => {
         console.log(p);
       });
     });
+
+    return {
+      handleAddGroup,
+    };
   },
 });
 </script>

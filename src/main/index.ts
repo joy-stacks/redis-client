@@ -2,24 +2,19 @@
  * @Author: JOY
  * @Date: 2024-06-18 09:40:29
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-19 13:45:33
- * @Description:
- */
-/*
- * @Author: JOY
- * @Date: 2024-06-18 09:40:29
- * @LastEditors: JOY
- * @LastEditTime: 2024-06-19 11:05:45
+ * @LastEditTime: 2024-06-20 16:14:13
  * @Description:
  */
 import { app, shell, BrowserWindow, protocol } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
-// import start from "../service/serve";
+// import start from "../service/main";
 
 import initIpcEvent from "./event/ipc-event";
 
 import icon from "../../resources/redis.ico?asset";
+
+app.commandLine.appendSwitch("disable-web-security");
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -45,6 +40,10 @@ function createWindow() {
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
+      nodeIntegration: true,
+      contextIsolation: false,
+      webSecurity: false,
+      allowRunningInsecureContent: true,
     },
   });
 
@@ -104,4 +103,4 @@ app.on("window-all-closed", () => {
 });
 
 // 启动接口服务
-// start();
+//start();
