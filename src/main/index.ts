@@ -2,14 +2,14 @@
  * @Author: JOY
  * @Date: 2024-06-18 09:40:29
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-20 16:14:13
+ * @LastEditTime: 2024-06-21 14:11:45
  * @Description:
  */
 import { app, shell, BrowserWindow, protocol } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
-// import start from "../service/main";
 
+import { server } from "./server/server";
 import initIpcEvent from "./event/ipc-event";
 
 import icon from "../../resources/redis.ico?asset";
@@ -18,7 +18,7 @@ app.commandLine.appendSwitch("disable-web-security");
 
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: "redis.client",
+    scheme: "app",
     privileges: {
       secure: true,
       standard: true,
@@ -29,8 +29,8 @@ protocol.registerSchemesAsPrivileged([
 function createWindow() {
   const mainWindow = new BrowserWindow({
     title: "redis客户端",
-    width: 900,
-    height: 670,
+    width: 1000,
+    height: 750,
     movable: true,
     show: false,
     frame: false,
@@ -40,10 +40,10 @@ function createWindow() {
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
-      nodeIntegration: true,
-      contextIsolation: false,
-      webSecurity: false,
-      allowRunningInsecureContent: true,
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
     },
   });
 
@@ -61,8 +61,8 @@ function createWindow() {
   if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
     mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
+    // createProtocol(ACHEME);
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
-    mainWindow.webContents.send("load", join(__dirname, "../renderer/index.html"));
   }
 
   return mainWindow;
@@ -97,10 +97,8 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
+  server.close();
   if (process.platform !== "darwin") {
     app.quit();
   }
 });
-
-// 启动接口服务
-//start();

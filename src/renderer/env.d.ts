@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-18 11:31:38
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-18 11:31:47
+ * @LastEditTime: 2024-06-21 16:41:29
  * @Description:
  */
 /// <reference types="vite/client" />
@@ -21,5 +21,20 @@ declare global {
 declare namespace Store {
   export interface AppState {
     imax: boolean;
+  }
+
+  export interface Link {
+    id: number;
+    pid: number;
+    name: string;
+    type: string;
+    host: string;
+    user: string;
+    pwd: string;
+    port: string;
+  }
+
+  export interface RedisState {
+    links: Link[];
   }
 }

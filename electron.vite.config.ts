@@ -2,11 +2,11 @@
  * @Author: JOY
  * @Date: 2024-06-18 09:35:54
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-18 11:19:24
+ * @LastEditTime: 2024-06-21 10:38:45
  * @Description:
  */
 import { resolve } from "path";
-import { defineConfig, externalizeDepsPlugin } from "electron-vite";
+import { defineConfig, externalizeDepsPlugin, swcPlugin } from "electron-vite";
 import vue from "@vitejs/plugin-vue";
 
 import Components from "unplugin-vue-components/vite";
@@ -16,7 +16,7 @@ import { vitePluginForArco } from "@arco-plugins/vite-vue";
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin(), swcPlugin()],
   },
   preload: {
     plugins: [externalizeDepsPlugin()],

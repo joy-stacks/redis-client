@@ -5,6 +5,8 @@
     "src/renderer/env.d.ts",
     "src/renderer/**/*",
     "src/renderer/**/*.vue",
+    "src/renderer/**/*.ts",
+    "src/renderer/**/**/*.vue",
     "src/preload/*.d.ts",
     "types/module.d.ts"
   ],

@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-20 13:35:21
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-20 17:38:52
+ * @LastEditTime: 2024-06-21 08:18:38
  * @Description:
  */
 import { Body, Controller, Logger, Post } from "@nestjs/common";
@@ -47,6 +47,7 @@ export class SysController {
   @Post("/group/add")
   groupAdd(@Body() groupAddDto: GroupAddDto) {
     try {
+      console.log(this.service)
       // 获取组名称
       const groupName = groupAddDto.group_name;
       if (!groupName) throw ResponseStatus.GroupNameIsNotEmpty;

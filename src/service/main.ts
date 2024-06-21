@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-19 10:05:43
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-20 16:03:01
+ * @LastEditTime: 2024-06-21 08:27:36
  * @Description:
  */
 import { NestFactory } from "@nestjs/core";
@@ -28,5 +28,3 @@ export default async function start() {
   
   await app.listen(3000);
 }
-
-start()
