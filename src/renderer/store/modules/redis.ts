@@ -13,26 +13,28 @@ import { getLinks } from "@renderer/api";
 export const useRedisStore = defineStore("RedisStore", {
   state: (): Store.RedisState => {
     return {
-      links: [],
+      cache: {
+        links: [],
+      },
     };
   },
   getters: {
     async link(): Promise<Store.Link[]> {
       // 判断是否存在值，如果不存在则请求获取
-      if (this.links.length <= 0) {
+      if (this.cache.links.length <= 0) {
         const result = await getLinks<Store.Link[]>();
         const data = result?.data || [];
         // 生成树形数据
-        this.links = data;
+        this.cache.links = data;
         return data;
       }
-      return this.links;
+      return this.cache.links;
     },
   },
   actions: {
-    /* setMax(bool: boolean) {
-      this.imax = bool;
-    }, */
+    setLinks(links: Store.Link[]) {
+      this.cache.links = links;
+    },
   },
   persist: {
     enabled: true,

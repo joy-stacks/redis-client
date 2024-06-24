@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 14:27:29
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-21 15:23:02
+ * @LastEditTime: 2024-06-24 13:18:04
  * @Description: 
 -->
 <template>
@@ -16,9 +16,14 @@
     :closable="closable"
     :hide-title="hideTitle"
     :draggable="draggable"
-    @ok="ok"
+    :mask-closable="false"
     @cancel="cancel"
+    @before-ok="ok"
   >
+    <template #footer>
+      <a-button type="secondary" @click="cancel">取消</a-button>
+      <a-button type="primary" @click="ok">提交</a-button>
+    </template>
     <slot></slot>
   </a-modal>
 </template>
@@ -26,7 +31,7 @@
 import { PropType, defineComponent, ref, watch } from "vue";
 export default defineComponent({
   expose: ["open"],
-  emits: ["update:modelValue", "ok", "cancel"],
+  emits: ["update:modelValue", "ok", "before-ok", "cancel", "before-close"],
   props: {
     modelValue: {
       type: Boolean,

@@ -35,6 +35,8 @@ declare namespace Store {
   }
 
   export interface RedisState {
-    links: Link[];
+    cache: {
+      links: Link[];
+    };
   }
 }

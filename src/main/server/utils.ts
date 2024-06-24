@@ -2,7 +2,7 @@ import { Response } from "express";
 
 export const success = <T>(data: T, res: Response) => {
   return res.send({
-    code: 0,
+    code: 1,
     msg: "",
     data: data,
   });
