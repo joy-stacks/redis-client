@@ -1,3 +1,10 @@
+/*
+ * @Author: JOY
+ * @Date: 2024-06-21 14:18:39
+ * @LastEditors: JOY
+ * @LastEditTime: 2024-06-25 09:44:29
+ * @Description:
+ */
 import request from "../utils/request";
 
 interface Response<T> {
@@ -71,6 +78,52 @@ export const getLinks = <T>(): Promise<Response<T>> => {
   return new Promise((resolve, reject) => {
     request
       .get("/v1/sys/links")
+      .then((res) => {
+        resolve(res.data);
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+/**
+ * 新增连接
+ * @param param
+ * @returns
+ */
+export const postLinkAdd = <T>(param: {
+  name: string;
+  gid: string;
+  type: string;
+  host: string;
+  port: string;
+  pwd: string;
+  user: string;
+}): Promise<Response<T>> => {
+  return new Promise((resolve, reject) => {
+    request
+      .post("/v1/sys/link/add", param)
+      .then((res) => {
+        resolve(res.data);
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+/**
+ * 连接测试
+ * @param param
+ * @returns
+ */
+export const postLinkTest = <T>(param: {
+  type: string;
+  host: string;
+  port: string;
+  pwd: string;
+  user: string;
+}): Promise<Response<T>> => {
+  return new Promise((resolve, reject) => {
+    request
+      .post("/v1/sys/link/test", param)
       .then((res) => {
         resolve(res.data);
       })

@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 15:32:00
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-24 15:55:54
+ * @LastEditTime: 2024-06-25 17:18:22
  * @Description: 
 -->
 <template>
@@ -32,7 +32,7 @@
           </template>
         </a-input>
       </div>
-      <div class="flex-1 px-2">
+      <div class="flex-1 px-2" @contextmenu="contextmenu">
         <a-tree
           ref="treeref"
           v-model:expanded-keys="expandedKeys"
@@ -44,17 +44,8 @@
           :block-node="true"
           @expand="expand"
           @select="select"
+          @contextmenu="contextmenu"
         >
-          <template #extra="nodeData">
-            <div class="flex flex-row gap-2 absolute right-8 top-2 text-[rgb(var(--primary-4))]">
-              <a-tooltip content="修改" position="top">
-                <icon-edit @click="() => uphold('2', nodeData)" />
-              </a-tooltip>
-              <a-tooltip content="删除" position="top">
-                <icon-delete @click="() => uphold('3', nodeData)" />
-              </a-tooltip>
-            </div>
-          </template>
         </a-tree>
       </div>
     </div>
@@ -76,11 +67,46 @@
 
     <!-- 连接维护 -->
     <link-uphold ref="linkref"></link-uphold>
+
+    <!-- 右键菜单栏 -->
+    <ContextMenu :visible="visible" :left="x" :top="y" @click="handleContext">
+      <template #default>
+        <div data-key="1" v-show="context.type === '1' || context.type === '3'">
+          <span></span>
+          <span>添加分组</span>
+        </div>
+        <div data-key="2" v-show="context.type === '1'">
+          <span></span>
+          <span>修改分组</span>
+        </div>
+        <div data-key="4" v-show="context.type === '1' || context.type === '3'">
+          <span></span>
+          <span>添加连接</span>
+        </div>
+        <div data-key="3" v-show="context.type === '2'">
+          <span></span>
+          <span>修改连接</span>
+        </div>
+        <div data-key="" v-show="context.type === '2'">
+          <span></span>
+          <span>断开连接</span>
+        </div>
+        <a-divider class="my-0" v-show="context.type !== '3'" />
+        <div data-key="5" v-show="context.type === '1'">
+          <span></span>
+          <span>删除分组</span>
+        </div>
+        <div data-key="" v-show="context.type === '2'">
+          <span></span>
+          <span>删除连接</span>
+        </div>
+      </template>
+    </ContextMenu>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, onMounted, h, computed, reactive } from "vue";
-import { Tree, TreeNodeData } from "@arco-design/web-vue";
+import { defineComponent, ref, onMounted, h, computed, reactive, toRefs } from "vue";
+import { Tree } from "@arco-design/web-vue";
 
 import debounce from "lodash/debounce";
 import cloneDeep from "lodash/cloneDeep";
@@ -89,9 +115,9 @@ import JIcon from "@renderer/components/svg-icon.vue";
 import GroupUphold from "@renderer/views/form/group-uphold.vue";
 import LinkUphold from "@renderer/views/form/link-uphold.vue";
 import JTag from "@renderer/layout/tag.vue";
+import ContextMenu from "@renderer/components/context-menu.vue";
 
 import { useRedisStoreWithout } from "@renderer/store/modules/redis";
-import { toRefs } from "vue";
 
 export default defineComponent({
   components: {
@@ -99,6 +125,7 @@ export default defineComponent({
     JTag,
     GroupUphold,
     LinkUphold,
+    ContextMenu,
   },
   setup() {
     const gaddref = ref<InstanceType<typeof GroupUphold>>();
@@ -114,6 +141,10 @@ export default defineComponent({
       selectedKeys: [] as Array<string | number>,
       selectablde: false,
       links: [] as Store.Link[],
+      visible: false,
+      x: 0,
+      y: 0,
+      context: { id: 0, pid: 0, type: "3", text: "" },
     });
 
     const trees = computed(() => {
@@ -121,22 +152,21 @@ export default defineComponent({
     });
 
     // 数据维护
-    const uphold = (type: string, record?: TreeNodeData & { id: number; pid: number }) => {
-      console.log(record);
+    const uphold = (type: string) => {
+      // 获取选中的分组
+      const context = state.context;
       switch (type) {
         case "1":
-          // 获取选中的分组
-          const pid = state.selectedKeys[0] || 0;
-          gaddref.value?.add(pid as number);
+          gaddref.value?.add(context.pid);
           break;
         case "2":
-          gaddref.value?.edit(record?.id as number, record?.pid as number, record?.title || "");
+          gaddref.value?.edit(context.id, context.pid, context.text);
           break;
-        case "3":
-          gaddref.value?.del(record?.key as number, record?.title || "");
+        case "5":
+          gaddref.value?.del(context.id, context.text);
           break;
         case "4":
-          linkref.value?.add();
+          linkref.value?.add(context.pid);
           break;
       }
     };
@@ -172,16 +202,73 @@ export default defineComponent({
           title: item.name,
           id: item.id,
           pid: pid,
+          type: item.type,
+          text: item.name,
           children: createTree(list, item.id),
           icon,
         };
       });
     };
 
+    // 寻找目标节点
+    const findNode = (target: HTMLElement) => {
+      // 获取所有的类名称
+      const classList = target.classList;
+      // 判断类样式中是否包含 arco-tree-node
+      if (classList.contains("arco-tree-node")) {
+        return target;
+      } else {
+        const parent = target.parentElement || target.parentNode;
+        if (parent instanceof HTMLElement) {
+          return findNode(parent);
+        }
+      }
+      return null;
+    };
+
     // 树节点展开
     const expand = (keys: Array<number | string>) => {
       state.expandedKeys =
         keys.length === 0 ? ([] as Array<string | number>) : state.defaultExpandedKeys;
+    };
+
+    // 右键菜单
+    const contextmenu = (evt: PointerEvent | MouseEvent) => {
+      evt.preventDefault();
+      // 记录当前鼠标的位置
+      state.x = evt.x;
+      state.y = evt.y;
+
+      // 寻找目标节点
+      const current = evt.target || evt.srcElement;
+      if (!current) return;
+
+      if (current instanceof HTMLElement) {
+        const target = findNode(current) as HTMLElement;
+        if (target) {
+          // 相关的属性
+          const attrs = target["__vueParentComponent"].attrs;
+          const { id, pid, type, text } = attrs as {
+            id: number;
+            pid: number;
+            type: string;
+            text: string;
+          };
+          state.context.id = id;
+          state.context.pid = pid;
+          state.context.type = type;
+          state.context.text = text;
+        } else {
+          state.context = { id: 0, pid: 0, type: "3", text: "" };
+        }
+      }
+      state.visible = true;
+    };
+
+    // 处理菜单的点击
+    const handleContext = (key: string) => {
+      if (!key) return;
+      uphold(key);
     };
 
     // 前一个选中
@@ -205,6 +292,10 @@ export default defineComponent({
       }) */
     }, 1000);
 
+    const close = () => {
+      state.visible = false;
+    };
+
     onMounted(async () => {
       await link;
     });
@@ -216,8 +307,11 @@ export default defineComponent({
       trees,
       uphold,
       expand,
+      contextmenu,
       select,
       filter,
+      close,
+      handleContext,
       ...toRefs(state),
     };
   },

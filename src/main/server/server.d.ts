@@ -1,3 +1,10 @@
+/*
+ * @Author: JOY
+ * @Date: 2024-06-21 11:29:23
+ * @LastEditors: JOY
+ * @LastEditTime: 2024-06-25 09:41:55
+ * @Description: 
+ */
 export interface Link {
   id: number;
   pid: number;
@@ -7,5 +14,6 @@ export interface Link {
   host: string;
   user: string;
   pwd: string;
-  port: string;
+  port: number;
+  ltype: string;
 }

@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-24 15:43:16
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-24 17:36:17
+ * @LastEditTime: 2024-06-25 11:19:51
  * @Description: 
 -->
 <template>
@@ -16,9 +16,18 @@
     @ok="ok"
     @cancel="cancel"
   >
+    <template #Footer>
+      <div class="flex flex-row items-center gap-2">
+        <a-button type="primary" @click="test" :loading="loading">测试连接</a-button>
+        <span class="flex-1"></span>
+        <a-button type="secondary" @click="cancel">取消</a-button>
+        <a-button type="primary" @click="ok">提交</a-button>
+      </div>
+    </template>
     <a-form
       ref="formref"
       :model="model"
+      :rules="rules"
       :label-col-props="{ span: 6 }"
       :wrapper-col-props="{ span: 18 }"
     >
@@ -32,7 +41,7 @@
             <a-input v-model="model.name" />
           </a-form-item>
           <a-form-item field="gid" label="分组" validate-trigger="change" required>
-            <a-tree-select v-model="model.gid" :data="trees"></a-tree-select>
+            <JTreeSelect v-model="model.gid" :data="trees" :parentable="true"> </JTreeSelect>
           </a-form-item>
           <a-form-item field="host" label="连接地址" validate-trigger="change" required>
             <a-input v-model="model.host">
@@ -66,16 +75,22 @@ import { useRedisStoreWithout } from "@renderer/store/modules/redis";
 import cloneDeep from "lodash/cloneDeep";
 import { Message, TreeNodeData } from "@arco-design/web-vue";
 
+import JTreeSelect from "@renderer/components/tree-select.vue";
+import { postLinkAdd, postLinkTest } from "@renderer/api";
+
 export default defineComponent({
   expose: ["add"],
   components: {
     JModal,
+    JTreeSelect,
   },
   setup() {
     const formref = ref();
 
     const state = reactive({
       visible: false,
+      type: 1,
+      loading: false,
     });
 
     const { setLinks, cache } = useRedisStoreWithout();
@@ -87,6 +102,7 @@ export default defineComponent({
       results.unshift({
         key: 0,
         title: "无",
+        children: [],
       });
       return results;
     });
@@ -107,7 +123,7 @@ export default defineComponent({
     const model = reactive({
       url: "redis://:123@127.0.0.1:6379/0",
       name: "",
-      gid: "0",
+      gid: 0,
       host: "127.0.0.1",
       type: "1",
       port: "6379",
@@ -116,13 +132,95 @@ export default defineComponent({
       db: "",
     });
 
-    const add = () => {
+    const rules = {
+      host: [
+        {
+          required: true,
+          message: "host是必填项",
+        },
+        {
+          validator: (_, cb) => {
+            if (!model.port) {
+              cb("端口是必填项");
+            } else {
+              cb();
+            }
+          },
+        },
+      ],
+    };
+
+    const add = (gid: number) => {
+      model.gid = gid;
+      state.type = 1;
       state.visible = true;
     };
 
-    const ok = () => {};
+    const ok = () => {
+      formref.value?.validate(async (errors) => {
+        if (errors) return;
 
-    const cancel = () => {};
+        const param = {
+          name: model.name,
+          gid: model.gid + "",
+          type: model.type,
+          host: model.host,
+          port: model.port,
+          pwd: model.pwd,
+          user: model.user,
+        };
+        let result;
+        let message = "";
+        if (state.type === 1) {
+          result = await postLinkAdd<Store.Link[]>(param);
+          message = "新增成功";
+        } else if (state.type === 2) {
+          /* result = await postGroupEdit<Store.Link[]>({
+            ...param,
+            group_id: model.group_id + "",
+          }); */
+          message = "修改成功";
+        }
+        if (result && result.code === 1) {
+          Message.success(message);
+          // 将新的数据提交到仓库
+          const data = result.data;
+          setLinks(data);
+          cancel();
+        } else {
+          Message.warning(result.msg);
+        }
+      });
+    };
+
+    const cancel = () => {
+      formref.value?.resetFields();
+      formref.value?.clearValidate();
+      state.visible = false;
+    };
+
+    // 链接测试
+    const test = () => {
+      formref.value?.validateField(["host"], async (errors) => {
+        if (errors) return;
+
+        const param = {
+          type: model.type,
+          host: model.host,
+          port: model.port,
+          pwd: model.pwd,
+          user: model.user,
+        };
+        state.loading = true;
+        const result = await postLinkTest(param);
+        if (result && result.code === 1) {
+          Message.success("Redis 连接成功");
+        } else {
+          Message.error(result.msg);
+        }
+        state.loading = false;
+      });
+    };
 
     // 解析url
     const parse = () => {
@@ -145,17 +243,18 @@ export default defineComponent({
         model.pwd = (match.groups && match.groups["pwd"]) || "";
         model.db = (match.groups && match.groups["db"]) || "0";
       }
-      console.log(match);
     };
 
     return {
       formref,
       model,
+      rules,
       trees,
       ok,
       cancel,
       add,
       parse,
+      test,
       ...toRefs(state),
     };
   },

@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 14:27:29
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-24 13:18:04
+ * @LastEditTime: 2024-06-25 10:00:44
  * @Description: 
 -->
 <template>
@@ -21,8 +21,11 @@
     @before-ok="ok"
   >
     <template #footer>
-      <a-button type="secondary" @click="cancel">取消</a-button>
-      <a-button type="primary" @click="ok">提交</a-button>
+      <slot name="Footer" v-if="$slots.Footer"></slot>
+      <div class="flex gap-2 justify-end" v-else>
+        <a-button type="secondary" @click="cancel">取消</a-button>
+        <a-button type="primary" @click="ok">提交</a-button>
+      </div>
     </template>
     <slot></slot>
   </a-modal>
