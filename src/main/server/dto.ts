@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 11:17:11
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-25 10:28:20
+ * @LastEditTime: 2024-06-26 15:48:04
  * @Description:
  */
 // 组新增
@@ -41,4 +41,13 @@ export interface LinkTestDto {
   port: string;
   pwd: string;
   user: string;
+}
+
+export interface LinkDto {
+  id: string;
+}
+
+export interface LinkCmdDto {
+  id: string;
+  command: string;
 }

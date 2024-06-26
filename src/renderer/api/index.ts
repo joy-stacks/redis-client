@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 14:18:39
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-25 09:44:29
+ * @LastEditTime: 2024-06-26 15:54:48
  * @Description:
  */
 import request from "../utils/request";
@@ -124,6 +124,38 @@ export const postLinkTest = <T>(param: {
   return new Promise((resolve, reject) => {
     request
       .post("/v1/sys/link/test", param)
+      .then((res) => {
+        resolve(res.data);
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+/**
+ * 连接
+ * @param param
+ * @returns
+ */
+export const postLink = <T>(param: { id: string }): Promise<Response<T>> => {
+  return new Promise((resolve, reject) => {
+    request
+      .post("/v1/sys/link", param)
+      .then((res) => {
+        resolve(res.data);
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+/**
+ * 命令执行
+ * @param param
+ * @returns
+ */
+export const postLinkCmd = <T>(param: { id: string; command: string }): Promise<Response<T>> => {
+  return new Promise((resolve, reject) => {
+    request
+      .post("/v1/sys/link/cmd", param)
       .then((res) => {
         resolve(res.data);
       })

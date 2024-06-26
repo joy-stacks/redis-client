@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-24 15:43:16
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-25 11:19:51
+ * @LastEditTime: 2024-06-26 15:59:08
  * @Description: 
 -->
 <template>
@@ -183,6 +183,7 @@ export default defineComponent({
         }
         if (result && result.code === 1) {
           Message.success(message);
+          // 打开当前的连接的页面
           // 将新的数据提交到仓库
           const data = result.data;
           setLinks(data);

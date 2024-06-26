@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-18 11:31:38
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-21 16:41:29
+ * @LastEditTime: 2024-06-26 10:59:21
  * @Description:
  */
 /// <reference types="vite/client" />
@@ -32,11 +32,26 @@ declare namespace Store {
     user: string;
     pwd: string;
     port: string;
+    isconnect: boolean;
   }
 
   export interface RedisState {
     cache: {
       links: Link[];
+    };
+  }
+
+  export interface Tag {
+    name: string;
+    id: number;
+    pid: number;
+    type: number;
+  }
+
+  export interface NavState {
+    nav: {
+      tags: Tag[];
+      active: number | string;
     };
   }
 }

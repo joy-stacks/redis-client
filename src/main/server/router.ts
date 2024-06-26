@@ -2,17 +2,27 @@
  * @Author: JOY
  * @Date: 2024-06-21 10:57:35
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-25 13:37:34
+ * @LastEditTime: 2024-06-26 16:56:33
  * @Description:
  */
 import express from "express";
 import fs from "node:fs";
 import { ROOT_REDIS_CONF } from "./constants";
-import { GroupAddDto, GroupEditDto, GroupDelDto, LinkAddDto, LinkTestDto } from "./dto";
+import {
+  GroupAddDto,
+  GroupEditDto,
+  GroupDelDto,
+  LinkAddDto,
+  LinkTestDto,
+  LinkDto,
+  LinkCmdDto,
+} from "./dto";
 import { success, fail } from "./utils";
+import splitargs from "redis-splitargs";
 
 import type { Link } from "./server.d";
 import { createRedisClient } from "./util";
+import Redis from "ioredis";
 
 const router = express.Router();
 
@@ -27,6 +37,9 @@ router.get("/", (_, res) => {
 
 // 本地缓存REDIS的连接数据
 let CacheRedis: Link[] = [];
+// redis已连接的客户端
+const clients: Map<string | number, Redis> = new Map();
+
 // 新增分组
 router.post("/sys/group/add", (req, res) => {
   const groupDto = req.body as GroupAddDto;
@@ -192,6 +205,7 @@ router.post("/sys/link/add", (req, res) => {
 router.post("/sys/link/test", async (req, res) => {
   try {
     const linkDto = req.body as LinkTestDto;
+
     const client = createRedisClient({
       host: linkDto.host,
       port: linkDto.port,
@@ -207,4 +221,49 @@ router.post("/sys/link/test", async (req, res) => {
   }
 });
 
+// 创建连接
+router.post("/sys/link", async (req, res) => {
+  try {
+    const linkDto = req.body as LinkDto;
+
+    const isExist = clients.has(linkDto.id);
+    if (!isExist) {
+      // 获取当前连接的信息
+      const ob = CacheRedis.find((item) => item.id === +linkDto.id && item.type === "2");
+      if (ob) {
+        const client = createRedisClient({
+          host: ob.host,
+          port: ob.port + "",
+          pwd: ob.pwd,
+          user: ob.user,
+        });
+        client && clients.set(linkDto.id, client);
+      }
+    }
+
+    return success(linkDto.id, res);
+  } catch (error: any) {
+    return fail(1005, error.message, res);
+  }
+});
+
+// 命令行查询
+router.post("/sys/link/cmd", async (req, res) => {
+  let result = "";
+  try {
+    const linkDto = req.body as LinkCmdDto;
+    // 获取当前的客户端
+    const client = clients.get(linkDto.id);
+    if (client) {
+      // 解析命令
+      const commands = splitargs(linkDto.command);
+      result = await client[commands[0]](...commands.slice(1));
+    }
+
+    return success(result, res);
+  } catch (error: any) {
+    console.log(error);
+    return success(error.message, res);
+  }
+});
 export default router;

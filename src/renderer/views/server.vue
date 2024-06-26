@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 15:32:00
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-25 17:18:22
+ * @LastEditTime: 2024-06-26 16:14:59
  * @Description: 
 -->
 <template>
@@ -43,8 +43,8 @@
           :draggable="true"
           :block-node="true"
           @expand="expand"
-          @select="select"
           @contextmenu="contextmenu"
+          @select="select"
         >
         </a-tree>
       </div>
@@ -58,7 +58,13 @@
         class="flex-1 bg-white mt-[1px] ml-1"
         style="box-shadow: 0px 0px 4px -4px rgba(130, 85, 255, 0.3) inset"
       >
-        <router-view></router-view>
+        <Content
+          v-for="(item, index) in tags"
+          v-show="active === item.id"
+          :type="item.type"
+          :id="item.id"
+          :key="index"
+        ></Content>
       </div>
     </div>
 
@@ -71,33 +77,37 @@
     <!-- 右键菜单栏 -->
     <ContextMenu :visible="visible" :left="x" :top="y" @click="handleContext">
       <template #default>
-        <div data-key="1" v-show="context.type === '1' || context.type === '3'">
-          <span></span>
-          <span>添加分组</span>
-        </div>
-        <div data-key="2" v-show="context.type === '1'">
-          <span></span>
-          <span>修改分组</span>
-        </div>
         <div data-key="4" v-show="context.type === '1' || context.type === '3'">
-          <span></span>
+          <JIcon name="link-add"></JIcon>
           <span>添加连接</span>
         </div>
         <div data-key="3" v-show="context.type === '2'">
-          <span></span>
+          <JIcon name="link-edit"></JIcon>
           <span>修改连接</span>
         </div>
+        <div data-key="1" v-show="context.type === '1' || context.type === '3'">
+          <JIcon name="group-add" :height="13" :width="13"></JIcon>
+          <span>添加分组</span>
+        </div>
+        <div data-key="2" v-show="context.type === '1'">
+          <JIcon name="group-edit" :height="13" :width="13"></JIcon>
+          <span>修改分组</span>
+        </div>
         <div data-key="" v-show="context.type === '2'">
-          <span></span>
+          <JIcon name="unlink"></JIcon>
           <span>断开连接</span>
+        </div>
+        <div data-key="cmd" v-show="context.type === '2'">
+          <JIcon name="cmd"></JIcon>
+          <span>打开终端</span>
         </div>
         <a-divider class="my-0" v-show="context.type !== '3'" />
         <div data-key="5" v-show="context.type === '1'">
-          <span></span>
+          <icon-delete class="text-[#f00]" />
           <span>删除分组</span>
         </div>
         <div data-key="" v-show="context.type === '2'">
-          <span></span>
+          <icon-delete class="text-[#f00]" />
           <span>删除连接</span>
         </div>
       </template>
@@ -106,7 +116,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, onMounted, h, computed, reactive, toRefs } from "vue";
-import { Tree } from "@arco-design/web-vue";
+import { Tree, TreeNodeData } from "@arco-design/web-vue";
 
 import debounce from "lodash/debounce";
 import cloneDeep from "lodash/cloneDeep";
@@ -116,8 +126,12 @@ import GroupUphold from "@renderer/views/form/group-uphold.vue";
 import LinkUphold from "@renderer/views/form/link-uphold.vue";
 import JTag from "@renderer/layout/tag.vue";
 import ContextMenu from "@renderer/components/context-menu.vue";
+import Content from "./components/content.vue";
+
+import { findNode } from "@renderer/utils";
 
 import { useRedisStoreWithout } from "@renderer/store/modules/redis";
+import { useNavStore } from "@renderer/store/modules/nav";
 
 export default defineComponent({
   components: {
@@ -126,6 +140,7 @@ export default defineComponent({
     GroupUphold,
     LinkUphold,
     ContextMenu,
+    Content,
   },
   setup() {
     const gaddref = ref<InstanceType<typeof GroupUphold>>();
@@ -133,6 +148,7 @@ export default defineComponent({
     const treeref = ref<InstanceType<typeof Tree>>();
 
     const { link, cache } = useRedisStoreWithout();
+    const { nav, setTag } = useNavStore();
 
     const state = reactive({
       keywords: "",
@@ -151,13 +167,16 @@ export default defineComponent({
       return createTree(cache.links, 0);
     });
 
+    const tags = computed(() => nav.tags);
+    const active = computed(() => nav.active);
+
     // 数据维护
     const uphold = (type: string) => {
       // 获取选中的分组
       const context = state.context;
       switch (type) {
         case "1":
-          gaddref.value?.add(context.pid);
+          gaddref.value?.add(context.id);
           break;
         case "2":
           gaddref.value?.edit(context.id, context.pid, context.text);
@@ -182,7 +201,10 @@ export default defineComponent({
         // 渲染图标的三种类型
         if (item.type === "1" && pid === 0) {
           // 展开
-          state.defaultExpandedKeys.push(item.id);
+          if (!state.defaultExpandedKeys.includes(item.id)) {
+            state.defaultExpandedKeys.push(item.id);
+            state.expandedKeys.push(item.id);
+          }
 
           if (state.expandedKeys.includes(item.id)) {
             icon = () => h(JIcon, { name: "root-folder-opened" });
@@ -195,6 +217,8 @@ export default defineComponent({
           } else {
             icon = () => h(JIcon, { name: "folder" });
           }
+        } else if (item.type === "2" && item.isconnect) {
+          icon = () => h(JIcon, { name: "linked" });
         }
 
         return {
@@ -210,26 +234,22 @@ export default defineComponent({
       });
     };
 
-    // 寻找目标节点
-    const findNode = (target: HTMLElement) => {
-      // 获取所有的类名称
-      const classList = target.classList;
-      // 判断类样式中是否包含 arco-tree-node
-      if (classList.contains("arco-tree-node")) {
-        return target;
-      } else {
-        const parent = target.parentElement || target.parentNode;
-        if (parent instanceof HTMLElement) {
-          return findNode(parent);
-        }
-      }
-      return null;
-    };
-
     // 树节点展开
     const expand = (keys: Array<number | string>) => {
       state.expandedKeys =
         keys.length === 0 ? ([] as Array<string | number>) : state.defaultExpandedKeys;
+    };
+
+    const select = (_, { node }: { node: TreeNodeData }) => {
+      if (node["type"] === "2") {
+        setTag({
+          name: node["text"],
+          id: node["id"],
+          pid: node["pid"],
+          type: 1,
+        });
+      }
+      console.log(node);
     };
 
     // 右键菜单
@@ -244,7 +264,12 @@ export default defineComponent({
       if (!current) return;
 
       if (current instanceof HTMLElement) {
-        const target = findNode(current) as HTMLElement;
+        const target = findNode(current, (el: HTMLElement) => {
+          // 获取所有的类名称
+          const classList = el.classList;
+          return classList.contains("arco-tree-node");
+        }) as HTMLElement;
+
         if (target) {
           // 相关的属性
           const attrs = target["__vueParentComponent"].attrs;
@@ -267,22 +292,19 @@ export default defineComponent({
 
     // 处理菜单的点击
     const handleContext = (key: string) => {
+      state.visible = false;
       if (!key) return;
-      uphold(key);
-    };
-
-    // 前一个选中
-    let originSelectedKeys: Array<number | string> = [];
-    // 选中树节点
-    const select = (keys: Array<number | string>) => {
-      // 判断选中的值是否相同
-      if (originSelectedKeys.length === 1 && originSelectedKeys[0] !== keys[0]) {
-        state.selectedKeys = keys;
+      // 打开终端
+      if (key === "cmd") {
+        setTag({
+          id: 1,
+          pid: 0,
+          type: 1,
+          name: "终端",
+        });
       } else {
-        state.selectablde = !state.selectablde;
-        state.selectedKeys = state.selectablde ? keys : [];
+        uphold(key);
       }
-      originSelectedKeys = keys;
     };
 
     // 过滤
@@ -305,10 +327,12 @@ export default defineComponent({
       linkref,
       treeref,
       trees,
+      tags,
+      active,
       uphold,
       expand,
-      contextmenu,
       select,
+      contextmenu,
       filter,
       close,
       handleContext,
@@ -317,3 +341,12 @@ export default defineComponent({
   },
 });
 </script>
+<style lang="less">
+.arco-tree-node-selected {
+  background-color: rgb(var(--primary-1));
+}
+
+.arco-tree-node-title:hover {
+  background: none !important;
+}
+</style>

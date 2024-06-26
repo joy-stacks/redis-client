@@ -115,6 +115,9 @@ devDependencies:
   postcss:
     specifier: ^8.4.38
     version: 8.4.38
+  redis-splitargs:
+    specifier: ^1.0.2
+    version: 1.0.2
   reflect-metadata:
     specifier: 0.2.0
     version: 0.2.0
@@ -133,12 +136,21 @@ devDependencies:
   vue:
     specifier: ^3.4.29
     version: 3.4.30(typescript@5.5.2)
+  vue-draggable-next:
+    specifier: ^2.2.1
+    version: 2.2.1(sortablejs@1.15.2)(vue@3.4.30)
   vue-router:
     specifier: ^4.3.3
     version: 4.4.0(vue@3.4.30)
   winston-daily-rotate-file:
     specifier: ^5.0.0
     version: 5.0.0(winston@3.13.0)
+  xterm:
+    specifier: ^5.3.0
+    version: 5.3.0
+  xterm-addon-fit:
+    specifier: ^0.8.0
+    version: 0.8.0(xterm@5.3.0)
 
 packages:
 
@@ -6261,6 +6273,10 @@ packages:
       redis-errors: 1.2.0
     dev: true
 
+  /redis-splitargs@1.0.2:
+    resolution: {integrity: sha512-7/jJMcSitzqnJDLaTQFecsFTR8mosfjpib1JHWTNAtjlWMbImC6T3VIMY+PXrcEz6i+IgwLzl86iFJ/w2X5eTw==}
+    dev: true
+
   /reflect-metadata@0.2.0:
     resolution: {integrity: sha512-vUN0wuk3MuhSVMfU/ImnPQAK8QZcXJ339DtVsP3jDscxCe6dT+PsOe3J1BYS9Ec2Fd4oC6ry6bCBebzTya0IYw==}
     deprecated: This version has a critical bug in fallback handling. Please upgrade to reflect-metadata@0.2.2 or newer.
@@ -6747,6 +6763,10 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       is-plain-obj: 1.1.0
+    dev: true
+
+  /sortablejs@1.15.2:
+    resolution: {integrity: sha512-FJF5jgdfvoKn1MAKSdGs33bIqLi3LmsgVTliuX6iITj834F+JRQZN90Z93yql8h0K2t0RwDPBmxwlbZfDcxNZA==}
     dev: true
 
   /source-map-js@1.2.0:
@@ -7665,6 +7685,16 @@ packages:
       vue: 3.4.30(typescript@5.5.2)
     dev: true
 
+  /vue-draggable-next@2.2.1(sortablejs@1.15.2)(vue@3.4.30):
+    resolution: {integrity: sha512-EAMS1IRHF0kZO0o5PMOinsQsXIqsrKT1hKmbICxG3UEtn7zLFkLxlAtajcCcUTisNvQ6TtCB5COjD9a1raNADw==}
+    peerDependencies:
+      sortablejs: ^1.14.0
+      vue: ^3.2.2
+    dependencies:
+      sortablejs: 1.15.2
+      vue: 3.4.30(typescript@5.5.2)
+    dev: true
+
   /vue-router@4.4.0(vue@3.4.30):
     resolution: {integrity: sha512-HB+t2p611aIZraV2aPSRNXf0Z/oLZFrlygJm+sZbdJaW6lcFqEDQwnzUBXn+DApw+/QzDU/I9TeWx9izEjTmsA==}
     peerDependencies:
@@ -7883,6 +7913,20 @@ packages:
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
+    dev: true
+
+  /xterm-addon-fit@0.8.0(xterm@5.3.0):
+    resolution: {integrity: sha512-yj3Np7XlvxxhYF/EJ7p3KHaMt6OdwQ+HDu573Vx1lRXsVxOcnVJs51RgjZOouIZOczTsskaS+CpXspK81/DLqw==}
+    deprecated: This package is now deprecated. Move to @xterm/addon-fit instead.
+    peerDependencies:
+      xterm: ^5.0.0
+    dependencies:
+      xterm: 5.3.0
+    dev: true
+
+  /xterm@5.3.0:
+    resolution: {integrity: sha512-8QqjlekLUFTrU6x7xck1MsPzPA571K5zNqWm0M0oroYEWVOptZ0+ubQSkQ3uxIEhcIHRujJy6emDWX4A7qyFzg==}
+    deprecated: This package is now deprecated. Move to @xterm/xterm instead.
     dev: true
 
   /y18n@5.0.8:

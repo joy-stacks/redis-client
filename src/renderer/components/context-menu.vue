@@ -2,13 +2,13 @@
  * @Author: JOY
  * @Date: 2024-06-25 15:53:10
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-25 16:53:58
+ * @LastEditTime: 2024-06-26 09:10:13
  * @Description: 
 -->
 <template>
   <div
-    class="absolute z-10 m-0 p-0 box-border text-sm text-[rgba(0,0,0,0.85)]"
     v-show="visible"
+    class="absolute z-10 m-0 p-0 box-border text-sm text-[rgba(0,0,0,0.85)]"
     :style="{ top: top + 'px', left: left + 'px' }"
   >
     <div class="menu-shadow" @click="handleClick">
@@ -17,6 +17,7 @@
   </div>
 </template>
 <script lang="ts">
+import { findNode } from "@renderer/utils";
 import { defineComponent, onBeforeUnmount, onMounted, reactive, toRefs, watch } from "vue";
 
 export default defineComponent({
@@ -24,7 +25,6 @@ export default defineComponent({
     visible: Boolean,
     left: Number,
     top: Number,
-    current: Number,
   },
   emits: ["click"],
   setup(props, { emit }) {
@@ -32,17 +32,15 @@ export default defineComponent({
       visible: props.visible,
       left: 0,
       top: 0,
-      current: -1,
     });
 
     watch(
-      () => [props.visible, props.left, props.top, props.current],
-      ([v, l, t, c]) => {
+      () => [props.visible, props.left, props.top],
+      ([v, l, t]) => {
+        state.visible = v as boolean;
         if (v) {
-          state.visible = v as boolean;
           state.left = (l ?? 0) as number;
           state.top = (t ?? 0) as number;
-          state.current = (c ?? -1) as number;
         }
       }
     );
@@ -50,13 +48,15 @@ export default defineComponent({
     const handleClick = (e: MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const target = e.target || e.srcElement;
-      
+      const target = (e.target || e.srcElement) as HTMLElement;
+
       if (!target) return;
-      if (target instanceof HTMLElement) {
-        const key = target.dataset.key || "";
-        emit("click", key);
-      }
+      const final = findNode(target, (el: HTMLElement) => {
+        return Object.keys(el.dataset).includes("key");
+      });
+      console.dir(final);
+      const key = final.dataset.key || "";
+      emit("click", key);
     };
 
     // 关闭右键菜单
@@ -88,7 +88,7 @@ export default defineComponent({
   @apply bg-clip-padding bg-white dark:bg-[#313131] rounded list-none m-0 outline-none py-1 relative text-left;
 
   & > div {
-    @apply flex items-center relative clear-both cursor-pointer transition py-1 px-3 text-sm hover:bg-[#f5f5f5] dark:hover:bg-[rgba(255,255,255,0.08)] text-[rgba(0,0,0,0.85)] dark:text-[rgba(255,255,255,0.85)];
+    @apply flex items-center gap-2 relative clear-both cursor-pointer transition py-1 px-3 text-sm hover:bg-[#f5f5f5] dark:hover:bg-[rgba(255,255,255,0.08)] text-[rgba(0,0,0,0.85)] dark:text-[rgba(255,255,255,0.85)];
   }
 }
 </style>
