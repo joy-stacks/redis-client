@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-24 15:43:16
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-26 15:59:08
+ * @LastEditTime: 2024-06-27 15:45:35
  * @Description: 
 -->
 <template>
@@ -120,8 +120,9 @@ export default defineComponent({
         };
       });
     };
+    // redis://:123@127.0.0.1:6379/0
     const model = reactive({
-      url: "redis://:123@127.0.0.1:6379/0",
+      url: "",
       name: "",
       gid: 0,
       host: "127.0.0.1",
@@ -231,7 +232,7 @@ export default defineComponent({
       }
       // Redis URL正则表达式
       const redisReg =
-        /redis\:\/\/\:(?<pwd>[\S]*)@(?<host>([0-9]{1,3}\.){3}[0-9]{1,3})\:(?<port>[1-9]{1,6})\/(?<db>[0-14]{1})/;
+        /redis\:\/\/(?<user>[\S]*)\:(?<pwd>[\S]*)@(?<host>([0-9]{1,3}\.){3}[0-9]{1,3})\:(?<port>[1-9]{1,6})\/(?<db>[0-14]{1})/;
       // 校验url是否有效
       if (!redisReg.test(model.url)) {
         Message.warning("解析失败：无效的 Redis URL");
@@ -243,6 +244,7 @@ export default defineComponent({
         model.port = (match.groups && match.groups["port"]) || "6379";
         model.pwd = (match.groups && match.groups["pwd"]) || "";
         model.db = (match.groups && match.groups["db"]) || "0";
+        model.user = (match.groups && match.groups["user"]) || "";
       }
     };
 

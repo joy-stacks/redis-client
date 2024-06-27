@@ -1,3 +1,10 @@
+<!--
+ * @Author: JOY
+ * @Date: 2024-06-25 08:27:28
+ * @LastEditors: JOY
+ * @LastEditTime: 2024-06-27 15:46:24
+ * @Description: 
+-->
 <template>
   <a-tree-select v-model="value" :data="data">
     <template #label="{ data }">{{ label(data) }}</template>
@@ -26,6 +33,7 @@ export default defineComponent({
     watch(
       () => props.modelValue,
       () => {
+        value.value = props.modelValue;
         emit("update:modelValue", props.modelValue);
       }
     );

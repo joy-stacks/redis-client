@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 15:32:00
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-27 10:08:45
+ * @LastEditTime: 2024-06-27 16:28:18
  * @Description: 
 -->
 <template>
@@ -34,6 +34,7 @@
       </div>
       <div class="flex-1 px-2" @contextmenu="contextmenu">
         <a-tree
+          class="h-full"
           ref="treeref"
           v-model:expanded-keys="expandedKeys"
           v-model:selected-keys="selectedKeys"
@@ -116,7 +117,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, onMounted, h, computed, reactive, toRefs } from "vue";
-import { Tree, TreeNodeData } from "@arco-design/web-vue";
+import { Tree } from "@arco-design/web-vue";
 
 import debounce from "lodash/debounce";
 import cloneDeep from "lodash/cloneDeep";
@@ -185,7 +186,7 @@ export default defineComponent({
           gaddref.value?.del(context.id, context.text);
           break;
         case "4":
-          linkref.value?.add(context.pid);
+          linkref.value?.add(context.id);
           break;
       }
     };
@@ -198,14 +199,14 @@ export default defineComponent({
         // 默认是目录
         let icon = () => h(JIcon, { name: "unlinked" });
 
+        // 展开
+        if (item.type !== "2" && !state.defaultExpandedKeys.includes(item.id)) {
+          state.defaultExpandedKeys.push(item.id);
+          state.expandedKeys.push(item.id);
+        }
+
         // 渲染图标的三种类型
         if (item.type === "1" && pid === 0) {
-          // 展开
-          if (!state.defaultExpandedKeys.includes(item.id)) {
-            state.defaultExpandedKeys.push(item.id);
-            state.expandedKeys.push(item.id);
-          }
-
           if (state.expandedKeys.includes(item.id)) {
             icon = () => h(JIcon, { name: "root-folder-opened" });
           } else {
@@ -240,7 +241,8 @@ export default defineComponent({
         keys.length === 0 ? ([] as Array<string | number>) : state.defaultExpandedKeys;
     };
 
-    const select = (_, { node }: { node: TreeNodeData }) => {
+    const select = (_, data) => {
+      const node = data.node;
       if (node["type"] === "2") {
         setTag({
           name: node["text"],
@@ -249,7 +251,6 @@ export default defineComponent({
           type: 2,
         });
       }
-      console.log(node);
     };
 
     // 右键菜单
@@ -305,6 +306,8 @@ export default defineComponent({
       } else {
         uphold(key);
       }
+      // 重置右键菜单上下文数据
+      state.context = { id: 0, pid: 0, type: "3", text: "" };
     };
 
     // 过滤
