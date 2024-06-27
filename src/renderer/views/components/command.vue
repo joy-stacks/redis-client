@@ -2,16 +2,16 @@
  * @Author: JOY
  * @Date: 2024-06-26 10:07:35
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-26 17:15:41
+ * @LastEditTime: 2024-06-27 09:56:10
  * @Description: 
 -->
 <template>
   <div class="h-full bg-[rgb(12,12,12)]">
-    <div ref="termref" class="h-full w-full p-2 flex flex-row"></div>
+    <div ref="termref" class="!overflow-hidden h-full w-full p-2 flex flex-row"></div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, reactive, toRefs, ref } from "vue";
+import { defineComponent, reactive, toRefs, ref, onUnmounted } from "vue";
 
 import "xterm/css/xterm.css";
 import { Terminal } from "xterm";
@@ -20,7 +20,6 @@ import { onMounted } from "vue";
 import { postLinkCmd } from "@renderer/api";
 
 interface IState {
-  term: Terminal | null;
   prefix: string;
   input: string;
 }
@@ -40,60 +39,76 @@ export default defineComponent({
   setup(props) {
     const termref = ref();
     const state = reactive<IState>({
-      term: null,
       prefix: "[root@serverip ~]# ",
       input: "",
     });
 
+    let term: Terminal | null = null;
+    let addon: FitAddon | null = null;
+
+    // 监听term数据
+    const onTermData = (data: string) => {};
+
+    // 光标是否可移动
+    const onTermCustomKey = (e: KeyboardEvent) => {
+      return true;
+    };
+
+    // 初始化
     const init = () => {
-      const fitAddon = new FitAddon();
-      const term = new Terminal({
+      addon = new FitAddon();
+      term = new Terminal({
         fontSize: 14,
+        fontFamily: "Courier New",
         cursorBlink: true,
         allowProposedApi: true,
         disableStdin: false,
         logLevel: "debug",
+        screenReaderMode: true,
+        theme: {
+          background: "#0C0C0C",
+        },
       });
-      term.loadAddon(fitAddon);
+      term.loadAddon(addon);
       term.open(termref.value);
       term.write(state.prefix);
 
-      fitAddon.fit();
+      addon.fit();
       term.focus();
+
+      term.onData(onTermData);
+      term.attachCustomKeyEventHandler(onTermCustomKey);
 
       term.onKey(async (e) => {
         const { key, domEvent } = e;
+        console.log(key);
         const { keyCode, altKey, altGraphKey, ctrlKey, metaKey } = domEvent;
         switch (keyCode) {
           case TERMINAL.ENTER:
             term.write("\r\n");
-            const result = await postLinkCmd<string | Array<string>>({
+            // 如果为空则不执行
+            const input = state.input.trim();
+            if (!input) return term.write(`\r${state.prefix}`);
+            console.log(input);
+            const result = await postLinkCmd<string>({
               id: props.id + "",
               command: state.input.trim(),
             });
             if (result.code === 1) {
-              if (!result.data) {
-                term.writeln("ok");
-              } else {
-                if (Array.isArray(result.data)) {
-                  result.data.forEach((item, index) => {
-                    term.writeln(`${index}) ${item}`);
-                  });
-                } else {
-                  term.writeln(result.data);
-                }
-              }
+              term.writeln(result.data);
             }
-            term.write(state.prefix);
+            term.write(`\r${state.prefix}`);
             state.input = "";
             break;
         }
       });
 
       term.onData((data: string) => {
-        console.log(data);
-        state.input += data;
-        term.write(data);
+        const printable = data.match(/[\x20-\x7E]/);
+        if (printable) {
+          state.input += data;
+          term.write(data);
+        }
       });
 
       // 光标移动
@@ -107,15 +122,27 @@ export default defineComponent({
         }
         return true;
       });
+
+      state.addon = fitAddon;
       state.term = term;
+    };
+
+    const resize = () => {
+      state.addon?.fit();
     };
 
     onMounted(() => {
       init();
 
-      document.addEventListener("resize", () => {
-        state.term?.resize(100, 100);
-      });
+      document.addEventListener("resize", resize);
+    });
+
+    onUnmounted(() => {
+      document.removeEventListener("resize", resize);
+      state.term?.dispose();
+      state.addon?.dispose();
+      state.term = null;
+      state.addon = null;
     });
 
     return {
@@ -125,3 +152,28 @@ export default defineComponent({
   },
 });
 </script>
+<style lang="less">
+.xterm {
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+.xterm-screen {
+  padding: 0 5px !important;
+}
+
+.xterm-viewport::-webkit-scrollbar {
+  background-color: #0c0c0c;
+  width: 5px;
+}
+
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: #0c0c0c;
+}
+
+.xterm-decoration-overview-ruler {
+  right: 1px;
+  pointer-events: none;
+}
+</style>

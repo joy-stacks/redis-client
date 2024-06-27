@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 15:32:00
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-26 16:14:59
+ * @LastEditTime: 2024-06-27 10:08:45
  * @Description: 
 -->
 <template>
@@ -246,7 +246,7 @@ export default defineComponent({
           name: node["text"],
           id: node["id"],
           pid: node["pid"],
-          type: 1,
+          type: 2,
         });
       }
       console.log(node);

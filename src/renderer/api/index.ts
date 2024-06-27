@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 14:18:39
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-26 15:54:48
+ * @LastEditTime: 2024-06-27 10:56:56
  * @Description:
  */
 import request from "../utils/request";
@@ -156,6 +156,24 @@ export const postLinkCmd = <T>(param: { id: string; command: string }): Promise<
   return new Promise((resolve, reject) => {
     request
       .post("/v1/sys/link/cmd", param)
+      .then((res) => {
+        resolve(res.data);
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+/**
+ * 获取所有key
+ * @param param 
+ * @returns 
+ */
+export const getLinkKeys = <T>(param: { id: string }): Promise<Response<T>> => {
+  return new Promise((resolve, reject) => {
+    request
+      .get("/v1/sys/link/keys", {
+        params: param,
+      })
       .then((res) => {
         resolve(res.data);
       })

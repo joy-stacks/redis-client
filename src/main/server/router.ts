@@ -2,7 +2,7 @@
  * @Author: JOY
  * @Date: 2024-06-21 10:57:35
  * @LastEditors: JOY
- * @LastEditTime: 2024-06-26 16:56:33
+ * @LastEditTime: 2024-06-27 10:55:31
  * @Description:
  */
 import express from "express";
@@ -249,7 +249,7 @@ router.post("/sys/link", async (req, res) => {
 
 // 命令行查询
 router.post("/sys/link/cmd", async (req, res) => {
-  let result = "";
+  let final = "";
   try {
     const linkDto = req.body as LinkCmdDto;
     // 获取当前的客户端
@@ -257,13 +257,57 @@ router.post("/sys/link/cmd", async (req, res) => {
     if (client) {
       // 解析命令
       const commands = splitargs(linkDto.command);
-      result = await client[commands[0]](...commands.slice(1));
+      if (!client[commands[0]]) throw new Error("Invalid command");
+
+      const result = await client[commands[0]](...commands.slice(1));
+      // 判断的返回数据类型
+      if (!result) {
+        final = "ok";
+      } else if (Array.isArray(result)) {
+        result.forEach((item, i) => {
+          final += `${i})${item}\r\n`;
+        });
+      } else {
+        final = result;
+      }
     }
 
-    return success(result, res);
+    return success(final, res);
   } catch (error: any) {
-    console.log(error);
     return success(error.message, res);
+  }
+});
+
+// 获取所有数据库的键
+router.get("/sys/link/keys", async (req, res) => {
+  const final: { db: string; keys: { key: string; type: string }[] }[] = [];
+  try {
+    const id = req.query.id as string;
+    // 获取当前的客户端
+    const client = clients.get(id);
+    if (client) {
+      for (let i = 0; i <= 15; i++) {
+        const ob = {
+          db: i + "",
+          keys: [] as { key: string; type: string }[],
+        };
+        await client.select(i);
+        const keys = await client.keys("*");
+        // 获取每一个键的类型
+        for (let j = 0; j < keys.length; j++) {
+          const key = keys[j];
+          const type = await client.type(key);
+          ob.keys.push({
+            key,
+            type,
+          });
+        }
+        final.push(ob);
+      }
+    }
+    return success(final, res);
+  } catch (error: any) {
+    return fail(1006, error.message, res);
   }
 });
 export default router;
